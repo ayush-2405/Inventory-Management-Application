@@ -152,25 +152,59 @@ class InventoryManagementSystem:
     def update_item(self):
         selected_item = self.tree.selection()
         if selected_item:
-            try:
-                item_id = self.tree.item(selected_item[0], "values")[0]
-                name = self.name_entry.get()
-                cost = float(self.cost_entry.get())
-                number = int(self.number_entry.get())
-                remarks = self.remarks_entry.get()
+            item_id = self.tree.item(selected_item[0], "values")[0]
+            update_window = tk.Toplevel(self.root)
+            update_window.title("Update Item")
+            
+            name_label = tk.Label(update_window, text="Item Name")
+            name_label.grid(row=0, column=0, padx=10, pady=10)
+            cost_label = tk.Label(update_window, text="Cost")
+            cost_label.grid(row=1, column=0, padx=10, pady=10)
+            number_label = tk.Label(update_window, text="Number")
+            number_label.grid(row=2, column=0, padx=10, pady=10)
+            remarks_label = tk.Label(update_window, text="Remarks")
+            remarks_label.grid(row=3, column=0, padx=10, pady=10)
+            
+            name_entry = tk.Entry(update_window)
+            name_entry.grid(row=0, column=1, padx=10, pady=10)
+            cost_entry = tk.Entry(update_window)
+            cost_entry.grid(row=1, column=1, padx=10, pady=10)
+            number_entry = tk.Entry(update_window)
+            number_entry.grid(row=2, column=1, padx=10, pady=10)
+            remarks_entry = tk.Entry(update_window)
+            remarks_entry.grid(row=3, column=1, padx=10, pady=10)
+            
+            item_values = self.tree.item(selected_item[0], "values")
+            name_entry.insert(0, item_values[1])
+            cost_entry.insert(0, item_values[2])
+            number_entry.insert(0, item_values[3])
+            remarks_entry.insert(0, item_values[4])
+            
+            def save_updates():
+                name = name_entry.get()
+                cost = cost_entry.get()
+                number = number_entry.get()
+                remarks = remarks_entry.get()
                 
-                self.cursor.execute('''
-                    UPDATE inventory
-                    SET name = ?, cost = ?, number = ?, remarks = ?
-                    WHERE id = ?
-                ''', (name, cost, number, remarks, item_id))
-                self.conn.commit()
-                self.load_data_into_tree()
-                self.clear_entries()
-            except ValueError:
-                messagebox.showerror("Invalid input", "Cost must be a number and Number must be an integer.")
-        else:
-            messagebox.showerror("Selection Error", "No item selected to update.")
+                if name and cost and number:
+                    try:
+                        cost = float(cost)
+                        number = int(number)
+                        self.cursor.execute('''
+                            UPDATE inventory
+                            SET name = ?, cost = ?, number = ?, remarks = ?
+                            WHERE id = ?
+                        ''', (name, cost, number, remarks, item_id))
+                        self.conn.commit()
+                        self.load_data_into_tree()
+                        update_window.destroy()
+                    except ValueError:
+                        messagebox.showerror("Invalid input", "Cost must be a number and Number must be an integer.")
+                else:
+                    messagebox.showerror("Input Error", "Please fill all fields.")
+            
+            save_button = tk.Button(update_window, text="Save", command=save_updates)
+            save_button.grid(row=4, column=0, columnspan=2, pady=10)
             
     def delete_item(self, event=None):
         selected_item = self.tree.selection()
@@ -184,18 +218,8 @@ class InventoryManagementSystem:
             messagebox.showerror("Selection Error", "No item selected to delete.")
             
     def select_item(self, event):
-        selected_item = self.tree.selection()
-        if selected_item:
-            item_values = self.tree.item(selected_item[0], "values")
-            self.name_entry.delete(0, tk.END)
-            self.name_entry.insert(0, item_values[1])
-            self.cost_entry.delete(0, tk.END)
-            self.cost_entry.insert(0, item_values[2])
-            self.number_entry.delete(0, tk.END)
-            self.number_entry.insert(0, item_values[3])
-            self.remarks_entry.delete(0, tk.END)
-            self.remarks_entry.insert(0, item_values[4])
-            
+        pass  # Functionality moved to update_item
+        
     def clear_entries(self):
         for name_entry, cost_entry, number_entry, remarks_entry in self.items:
             name_entry.delete(0, tk.END)
